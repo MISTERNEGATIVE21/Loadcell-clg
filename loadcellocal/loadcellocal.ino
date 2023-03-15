@@ -36,7 +36,7 @@ void setup() {
   // load cell factor 20 KG
   // scale.set_scale(127.15);
   // load cell factor 5 KG
-  float calib= -(74695/200);
+  float calib= -(372755/100);
   scale.set_scale(calib);       // TODO you need to calibrate this yourself.
   // reset the scale to zero = 0
   scale.tare();
@@ -46,9 +46,10 @@ void setup() {
 void loop() {
   // Get the weight reading from the HX711
    weight = scale.get_units(5);
+   weight= 10*weight;
   // Print the weight reading to the serial monitor
   Serial.print("Weight: ");
-  Serial.println(weight, 2);
+  Serial.println(weight);
 
   // Print the weight reading to the LCD
   lcd.clear();
