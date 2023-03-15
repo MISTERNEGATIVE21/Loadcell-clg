@@ -61,6 +61,10 @@ void loop() {
     delay(9000);
   } 
   else {
+    lcd.clear();
+  lcd.setCursor(0, 0);
+
+  lcd.print("HX711 not found");
     Serial.println("HX711 not found.");
   }
   delay(1000);
