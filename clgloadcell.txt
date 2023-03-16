@@ -1,0 +1,164 @@
+// Calibrating the load cell
+#include <Arduino.h>
+#include "HX711.h"
+#include <Wire.h>
+int button = 2; // push button is connected
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27,16,2); //set the LCD address to 0x27 for a 16 chars and 2 line display
+// HX711 circuit wiring
+const int DOUT_PIN = 12;
+const int SCK_PIN = 13;
+long reading; // global
+float finalcalib; // gloabl for global calibration
+int knownweight = 200 ; // supplied weight to be calibrated
+int temp = 0;    // temporary variable for reading the button pin status
+uint32_t start, stop;
+volatile float weight;
+
+
+HX711 scale;
+
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(button, INPUT_PULLUP); // declare push button as input
+  scale.begin(DOUT_PIN,SCK_PIN);
+scale.tare();
+  lcd.init();
+  lcd.backlight();
+
+
+  // Print a welcome message to the LCD
+  lcd.setCursor(0, 0);
+  lcd.print("IOT WEIGHT");
+  lcd.setCursor(0, 1);
+  lcd.print("LoadCell Test");
+  
+  delay(5000);
+}
+void calibration () // calibration test
+{
+Serial.print(" Enter the Known weight ");
+int knownweight = Serial.parseInt();
+if (scale.is_ready()) {
+    scale.set_scale(); 
+    lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("remove weights  ");   
+    Serial.println("Tare... remove any weights from the scale.");
+    delay(10000);
+    scale.tare();
+    lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(" Tare Done: ");
+    Serial.println("Tare done...");
+    lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(" Place known ");
+  lcd.setCursor(0,1);
+  lcd.print("Weights : ");
+    Serial.print("Place a known weight on the scale...");
+    delay(10000);
+    reading = scale.get_units(10);
+    lcd.clear();
+  lcd.setCursor(0, 0);
+
+
+  lcd.print("Results");
+   lcd.setCursor(0, 1);
+   lcd.print(reading);
+   
+    Serial.print("Result: ");
+    Serial.println(reading);
+    delay(9000);
+        finalcalib = reading/knownweight;
+  } 
+  else {
+    lcd.clear();
+  lcd.setCursor(0, 0);
+
+
+  lcd.print("HX711 not found");
+    Serial.println("HX711 not found.");
+  }
+  delay(1000);
+}
+
+
+void tare()
+{
+scale.tare();
+    lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(" Tare Done: ");
+    Serial.println("Tare done...");
+    lcd.clear();
+    delay(5000);
+
+
+}
+void readingsetup()
+{
+  scale.tare();
+  lcd.init();
+  lcd.backlight();
+
+
+  // Print a welcome message to the LCD
+  lcd.setCursor(0, 0);
+  lcd.print("IOT Weighing");
+  lcd.setCursor(0, 1);
+  lcd.print("LoadCell Test");
+
+
+  delay(6000);
+ 
+    scale.begin(DOUT_PIN,SCK_PIN);
+  // calib = reading / kown weight 
+  // TODO find a nice solution for this calibration..
+  // load cell factor 20 KG
+  // scale.set_scale(127.15);
+  // load cell factor 5 KG
+  float calib= finalcalib;
+  scale.set_scale(calib);       // TODO you need to calibrate this yourself.
+  // reset the scale to zero = 0
+  scale.tare();
+}
+void scalereading() // scale will test reading
+{
+weight = scale.get_units(5);
+   weight= 10*weight;
+  // Print the weight reading to the serial monitor
+  Serial.print("Weight: ");
+  Serial.println(weight);
+
+
+  // Print the weight reading to the LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Weight: ");
+  lcd.print(weight, 2);
+  lcd.print(" g");
+
+
+  delay(500);  
+}
+
+
+void loop() {
+  temp = digitalRead(button);
+Serial.println(temp);
+  delay(100);  
+if (temp  == 0 )
+{
+  
+  calibration () ;
+}
+else if(temp == 1)
+{
+readingsetup();
+scalereading();
+}
+delay(5000);
+}
+//calibration factor will be the (reading)/(known weight)
