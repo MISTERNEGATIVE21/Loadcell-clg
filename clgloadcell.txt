@@ -6,8 +6,8 @@ int button = 2; // push button is connected
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(0x27,16,2); //set the LCD address to 0x27 for a 16 chars and 2 line display
 // HX711 circuit wiring
-const int DOUT_PIN = 12;
-const int SCK_PIN = 13;
+const int DOUT_PIN = 13;
+const int SCK_PIN = 14;
 long reading; // global
 float finalcalib; // gloabl for global calibration
 int knownweight = 200 ; // supplied weight to be calibrated
