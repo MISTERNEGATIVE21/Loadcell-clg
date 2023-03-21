@@ -1,0 +1,152 @@
+#include <ConsentiumThings.h>
+#include "HX711.h"
+#include <HX711.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+const char *ssid = "AEIE IIOT Lab"; // add WiFi SSID
+const char *pass = "hitk@aeie18"; // add WiFi password
+const long interval = 5; // take 5 seconds of delay 
+const char *key = "LZBGAQUAGHDJ1-O44HQJTW";      // Write api key
+float finalcalib; // gloabl for global calibration
+int knownweight = 200 ; // supplied weight to be calibrated
+HX711 scale;
+ConsentiumThings board;   // create ConsentiumThing object
+uint8_t dataPin = 13;
+uint8_t clockPin = 14;
+
+int rbutton = 19; // this button will be used to reset the scale to 0.
+float weight;
+float calibration_factor = -(74705/200); // for me this vlaue works just perfect 419640
+ 
+void setup() 
+{
+  Serial.begin(115200);
+  scale.begin(dataPin, clockPin);
+  pinMode(rbutton, INPUT_PULLUP); 
+  scale.set_scale();
+  scale.tare(); //Reset the scale to 0
+  long zero_factor = scale.read_average(); //Get a baseline reading
+  board.begin();   // init. IoT boad
+  Wire.begin(22, 21);
+  lcd.begin();
+  lcd.setCursor(6,0);
+  lcd.print("IOT");
+  lcd.setCursor(1,1);
+  lcd.print("Weighing Scale");
+  delay(3000);
+  lcd.clear();
+ 
+  lcd.print("Connecting Wifi");
+  
+  
+  board.initWiFi(ssid, pass);  // begin WiFi connection
+  {
+  delay(1000);
+  Serial.print(".");
+  lcd.clear();
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  lcd.clear();
+  lcd.print("WiFi connected");
+  
+  delay(2000);
+}
+ 
+void loop() 
+ 
+{
+ 
+  
+  scale.set_scale(calibration_factor); //Adjust to this calibration factor
+ 
+  weight = scale.get_units(5); 
+ 
+  lcd.setCursor(0, 0);
+  lcd.print("Measured Weight");
+  lcd.setCursor(0, 1);
+  lcd.print(weight);
+  lcd.print(" KG  ");
+  delay(2000);
+  lcd.clear();
+  
+  Serial.print("Weight: ");
+  Serial.print(weight);
+  Serial.println(" KG");
+  Serial.println();
+  float sensor_val[] = {weight};  // sensor data array
+  String info_buff[] = {"Weight"}; // sensor info. array
+  
+  int sensor_num = sizeof(sensor_val)/sizeof(sensor_val[0]); // number of sensors connected 
+  
+  board.sendREST(key, sensor_num, info_buff, sensor_val, LOW_PRE, interval); // send over REST with delay with desired prescision
+ 
+  if ( digitalRead(rbutton) == LOW)
+{
+  scale.set_scale();
+  scale.tare(); //Reset the scale to 0
+}
+ 
+}
+void tare()
+{
+scale.tare();
+    lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(" Tare Done: ");
+    Serial.println("Tare done...");
+    lcd.clear();
+    delay(5000);
+
+
+}
+void calibration () // calibration test
+{
+Serial.print(" Enter the Known weight ");
+int knownweight = Serial.parseInt();
+long reading; 
+if (scale.is_ready()) {
+    scale.set_scale(); 
+    lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("remove weights  ");   
+    Serial.println("Tare... remove any weights from the scale.");
+    delay(10000);
+    scale.tare();
+    lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(" Tare Done: ");
+    Serial.println("Tare done...");
+    lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(" Place known ");
+  lcd.setCursor(0,1);
+  lcd.print("Weights : ");
+    Serial.print("Place a known weight on the scale...");
+    delay(10000);
+    reading = scale.get_units(10);
+    lcd.clear();
+  lcd.setCursor(0, 0);
+
+
+  lcd.print("Results");
+   lcd.setCursor(0, 1);
+   lcd.print(reading);
+   
+    Serial.print("Result: ");
+    Serial.println(reading);
+    delay(9000);
+        finalcalib = reading/knownweight;
+        calibration_factor =finalcalib;
+  } 
+  else {
+    lcd.clear();
+  lcd.setCursor(0, 0);
+
+
+  lcd.print("HX711 not found");
+    Serial.println("HX711 not found.");
+  }
+  delay(1000);
+}
