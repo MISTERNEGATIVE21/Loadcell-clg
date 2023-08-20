@@ -17,14 +17,15 @@
   uint8_t clockPin = 22;
       const char *key ;
       const char *board_key ;
-    
+   int gpio_0 = 0; // GPIO 0 is the button that will be used to reset the board 
   int rbutton = 4; // this button will be used to reset the scale to 0.
   float weight;
+    WiFiManager wfm;
   float calibration_factor = -(2800.75/200); // for me this vlaue works just perfect 419640
   void setup() 
   {
     Serial.begin(115200);
-      WiFiManager wfm;
+    
  
     wfm.setDebugOutput(false);
 
@@ -95,10 +96,7 @@
   
   void measure(){
 
-    unsigned long currentMillis = millis();
-
-      if (currentMillis - previousUpdateTime >= updateInterval) {
-          previousUpdateTime = currentMillis;
+    
     scale.set_scale(calibration_factor); //Adjust to this calibration factor
     weight = scale.get_units(5); 
   
@@ -121,7 +119,7 @@
     
   board.sendREST(key, board_key, sensor_val, info_buff, sensor_num, LOW_PRE); // send over REST with delay with desired prescision
   }
-  }
+  
   void tare()
   {
   scale.tare();
@@ -134,10 +132,7 @@
   }
   void calibration() // calibration test
   {
-    unsigned long currentMillis = millis();
-
-      if (currentMillis - previousUpdateTime >= updateInterval) {
-          previousUpdateTime = currentMillis;
+  
       lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Enter weights   "); 
@@ -188,9 +183,25 @@
     }
     delay(1000);
   }
-  }
   void loop() {
+ if (digitalRead(gpio_0) == LOW) { //Push button pressed
 
+        // Key debounce handling
+        delay(100);
+        int startTime = millis();
+        while (digitalRead(gpio_0) == LOW) {
+          Serial.println("Reset PRESSED \n");
+            delay(150);
+        }
+        int endTime = millis();
+
+        if ((endTime - startTime) > 10000) {
+            // If key pressed for more than 10secs, reset all
+            Serial.printf("Reset to factory.\n");
+            wfm.resetSettings();
+           ESP.restart();  
+        }
+ }
   measure(); // contiunuosly measure the weight
     if ( digitalRead(rbutton) == LOW)
   {
