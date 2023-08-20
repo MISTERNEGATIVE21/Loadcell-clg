@@ -7,7 +7,7 @@
 LiquidCrystal_I2C lcd(0x27,16,2); //set the LCD address to 0x27 for a 16 chars and 2 line display
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = 12;
-const int LOADCELL_SCK_PIN = 13;
+const int LOADCELL_SCK_PIN = 14;
 
 HX711 scale;
 

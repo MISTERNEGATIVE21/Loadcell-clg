@@ -7,8 +7,8 @@ LiquidCrystal_I2C lcd(0x27,16,2); //set the LCD address to 0x27 for a 16 chars a
 
 HX711 scale;
 
-uint8_t dataPin = 12;
-uint8_t clockPin = 13;
+uint8_t dataPin = 12;   //12;
+uint8_t clockPin = 14; //13;
 
 uint32_t start, stop;
 volatile float weight;
@@ -36,7 +36,7 @@ void setup() {
   // load cell factor 20 KG
   // scale.set_scale(127.15);
   // load cell factor 5 KG
-  float calib= -(372755/100);
+  float calib= (140075/100);
   scale.set_scale(calib);       // TODO you need to calibrate this yourself.
   // reset the scale to zero = 0
   scale.tare();
@@ -46,7 +46,7 @@ void setup() {
 void loop() {
   // Get the weight reading from the HX711
    weight = scale.get_units(5);
-   weight= 10*weight;
+   
   // Print the weight reading to the serial monitor
   Serial.print("Weight: ");
   Serial.println(weight);
