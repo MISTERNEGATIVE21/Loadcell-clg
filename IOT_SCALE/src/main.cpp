@@ -28,15 +28,22 @@
  
     wfm.setDebugOutput(false);
 
-    wfm.resetSettings();
+  //  wfm.resetSettings();
 
-      WiFiManagerParameter sendapi_text_box("my_text", "Enter the Send API KEY ", "default", 50);
-      WiFiManagerParameter boardapi_text_box("my_text", "Enter the API KEY ", "default", 50);
-    // Add custom parameter
-    wfm.addParameter(&sendapi_text_box);
-    wfm.addParameter(&boardapi_text_box);
+       WiFiManagerParameter sendapi("Send", "Enter the Send API KEY ", "default", 50);
+ 
+  WiFiManagerParameter boardapi("Board", "Enter the Board API KEY ", "default", 50);
 
-    if (!wfm.autoConnect("IOT-WEIGHING_SCALE", "iot_Scale")) {
+  // WiFiManagerParameter sendapi("Send", "Enter the Send API KEY ", "default", 50);
+  // WiFiManagerParameter receiveapi("Receive", "Enter the Receive API KEY ", "default", 50); ADD INPUT GPIOS
+  // WiFiManagerParameter boardapi("Board", "Enter the Board API KEY ", "default", 50);
+  // Add custom parameter
+  wfm.addParameter(&sendapi);
+  wfm.addParameter(&boardapi);
+   
+
+
+    if (!wfm.autoConnect("IOT-WEIGHING_SCALE", "iotscale")) {
       // Did not connect, print error message
       Serial.println("failed to connect and hit timeout");
 
@@ -69,8 +76,8 @@
       pss = WiFi.psk();
       const char *ssid=(char*)sid.c_str();
       const char *pass=(char*)pss.c_str();
-        key = (char*)sendapi_text_box.getValue();
-        board_key = (char*)boardapi_text_box.getValue();
+       const char *key = (char *)sendapi.getValue();
+  const char *board_key = (char *)boardapi.getValue();
 
     board.initWiFi(ssid, pass);  // begin WiFi connection
     {
